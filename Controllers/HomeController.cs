@@ -81,6 +81,7 @@ namespace DatabaseQuiz.Controllers
                 return View();
             }
 
+            Session["Welcome"] = $"{member.UserName} 您好!";
             // 登入成功
             FormsAuthentication.SetAuthCookie(UserId, true);
             return RedirectToAction("Index", "Member");
