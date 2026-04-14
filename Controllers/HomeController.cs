@@ -77,7 +77,7 @@ namespace DatabaseQuiz.Controllers
             if (member == null)
             {
                 // 如果格式正確但找不到人，通常會歸類在身分證或手機錯誤（或是統一顯示登入失敗）
-                ViewBag.UserIdMessage = "身分證字號或手機門號有誤";
+                ViewBag.UserIdMessage = "此帳號不存在";
                 return View();
             }
 
