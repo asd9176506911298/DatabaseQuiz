@@ -1,0 +1,35 @@
+﻿@{
+    ViewBag.Title = "登入頁面";
+}
+
+<style>
+    .custom-label {
+        width: 100px;
+        text-align: right;
+    }
+</style>
+
+@using (Html.BeginForm())
+{
+    <div class="form-group d-flex align-items-center mb-3">
+        @Html.Label("身分證字號:", new { @for = "UserId", @class = "custom-label me-2" })
+        <div class="col-sm-6">
+            @Html.TextBox("UserId", null, new { id = "UserId", @class = "form-control", @placeholder = "請輸入身分證字號" })
+            <div class="text-danger">
+                @ViewBag.UserIdMessage
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group d-flex align-items-center mb-3">
+        @Html.Label("手機門號:", new { @for = "PhoneNumber", @class = "custom-label me-2" })
+        <div class="col-sm-6">
+            @Html.TextBox("PhoneNumber", null, new { id = "PhoneNumber", @class = "form-control", @placeholder = "請輸入手機門號" })
+            <div class="text-danger">
+                @ViewBag.PhoneNumberMessage
+            </div>
+        </div>
+    </div>
+
+    <input type="submit" value="登入" class="btn btn-primary" />
+}
