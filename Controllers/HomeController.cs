@@ -50,7 +50,7 @@ namespace DatabaseQuiz.Controllers
                 ViewBag.UserIdMessage = "請輸入身分證字號";
                 hasError = true;
             }
-            else if (UserId.Length != 10) // 簡單範例：身分證應為10碼
+            else if (UserId.Length != 10) // 簡單範例：身分證應為10碼 實際使用要用公式計算是否為有效的格式
             {
                 ViewBag.UserIdMessage = "身分證字號有誤";
                 hasError = true;
