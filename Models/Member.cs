@@ -10,6 +10,9 @@ namespace DatabaseQuiz.Models
     {
         public int Id { get; set; }
 
+        [Display(Name = "使用者名稱")]
+        public string UserName { get; set; }
+
         [Required]
         [Display(Name = "身分證字號")]
         public string UserId { get; set; }
