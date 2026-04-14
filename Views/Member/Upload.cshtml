@@ -93,18 +93,33 @@ else
         <p>檔案大小：<strong>上限 2MB</strong></p>
     </div>
 
-    <div id="dropZone">
-        <div class="upload-text" id="uploadText">
-            <i class="fa fa-cloud-upload fa-3x" style="display:block; margin-bottom:10px;"></i>
-            <span>點擊或拖曳圖片至此區</span>
+    @* 修正 1: 加上 @ 符號 *@
+    using (Html.BeginForm("Upload", "Member", FormMethod.Post, new { enctype = "multipart/form-data", id = "uploadForm" }))
+    {
+        @Html.AntiForgeryToken()
+        <div id="dropZone">
+            <div class="upload-text" id="uploadText">
+                <i class="fa fa-cloud-upload fa-3x" style="display:block; margin-bottom:10px;"></i>
+                <span>點擊或拖曳圖片至此區</span>
+            </div>
+
+            <img id="imgPreview" src="#" alt="圖片預覽" />
+
+            @* 修正 2: 加上 name="uploadedFile"，這要跟 Controller 參數名稱一致 *@
+            <input type="file" name="uploadedFile" id="fileInput" accept="image/png, image/jpeg" style="display: none;" />
         </div>
 
-        <img id="imgPreview" src="#" alt="圖片預覽" />
+        <p id="errorMsg">
+            @ViewBag.ErrorMessage
+        </p>
 
-        <input type="file" id="fileInput" accept="image/png, image/jpeg" style="display: none;" />
-    </div>
+        if (ViewBag.SuccessMessage != null)
+        {
+            <p style="color:green; font-weight:bold;">@ViewBag.SuccessMessage</p>
+        }
 
-    <p id="errorMsg"></p>
+        <button type="submit" class="btn btn-primary" style="margin-top: 15px;">確認提交上傳</button>
+    } @* 修正 3: else 的內容在這裡結束 *@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -148,26 +163,28 @@ else
         async function handleFile(file) {
             if (!file) return;
 
-            // --- 重置狀態 ---
+            // 1. 先重置錯誤訊息，但先不要清空 fileInput.value
             errorMsg.innerText = "";
-            fileInput.value = "";
 
-            // 1. 先做基礎的大小檢查 (2MB)
+            // 2. 基礎的大小檢查 (2MB)
             if (file.size > 2 * 1024 * 1024) {
                 errorMsg.innerText = "圖片超過容量限制";
+                fileInput.value = ""; // 驗證失敗才清空，這樣表單才送不出去
                 hidePreview();
                 return;
             }
 
-            // 2. 【核心修改】檢查 Magic Header
+            // 3. 檢查 Magic Header
             const isValidRealType = await checkMagicNumbers(file);
             if (!isValidRealType) {
                 errorMsg.innerText = "僅支援JPG、PNG格式 (檔案內容不符)";
+                fileInput.value = ""; // 驗證失敗才清空
                 hidePreview();
                 return;
             }
 
-            // 3. 成功後顯示預覽
+            // 4. 驗證成功：顯示預覽
+            // 此時絕對不能清空 fileInput.value，要留給 Form Post 用
             const reader = new FileReader();
             reader.onload = function (e) {
                 imgPreview.src = e.target.result;
