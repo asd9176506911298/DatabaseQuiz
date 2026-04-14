@@ -1,7 +1,214 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Upload";
+    bool isAdmin = ViewBag.IsAdmin ?? false;
 }
 
-<h2>Upload</h2>
+<style>
+    /* Admin 上傳區樣式 */
+    #dropZone {
+        border: 2px dashed #007bff; /* 藍色虛線 */
+        width: 400px;
+        height: 250px;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        margin-top: 20px;
+        /* 關鍵：為了讓圖片絕對定位在內部 */
+        position: relative;
+        /* 讓內部文字置中 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s;
+    }
 
+        /* 拖曳 Hover 效果 */
+        #dropZone.dragover {
+            background-color: #e2e6ea;
+            border-color: #0056b3;
+        }
+
+    /* 拖曳區內的文字 */
+    .upload-text {
+        color: #6c757d;
+        text-align: center;
+        padding: 20px;
+        /* 確保文字在圖片下方（當圖片顯示時）*/
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 關鍵：圖片預覽樣式（直接在拖曳區內） */
+    #imgPreview {
+        /* 絕對定位，填滿父容器 #dropZone */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* 保持圖片比例，不變形 */
+        object-fit: contain;
+        /* 預設隱藏 */
+        display: none;
+        z-index: 2; /* 在文字上方 */
+
+        border-radius: 8px; /* 稍微圓角 */
+        background-color: #fff; /* 圖片背景補白 */
+    }
+
+    /* 錯誤訊息樣式 */
+    #errorMsg {
+        color: #dc3545; /* 紅色 */
+        font-weight: bold;
+        margin-top: 15px;
+        min-height: 20px; /* 保持高度，防止排版跳動 */
+    }
+
+    /* User 權限不足樣式 */
+    .user-blocked {
+        color: #6c757d;
+        background-color: #fff3cd; /* 淺黃色背景 */
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #ffeeba;
+        margin-top: 20px;
+    }
+</style>
+
+<h2>以 @ViewBag.UserDisplayName 成功登入</h2>
+
+<hr />
+
+@if (!isAdmin)
+{
+    <div class="user-blocked">
+        <h4>圖片上傳不適用</h4>
+    </div>
+}
+else
+{
+    <div class="upload-info">
+        <p>檔案格式：<strong>JPG、PNG</strong></p>
+        <p>檔案大小：<strong>上限 2MB</strong></p>
+    </div>
+
+    <div id="dropZone">
+        <div class="upload-text" id="uploadText">
+            <i class="fa fa-cloud-upload fa-3x" style="display:block; margin-bottom:10px;"></i>
+            <span>點擊或拖曳圖片至此區</span>
+        </div>
+
+        <img id="imgPreview" src="#" alt="圖片預覽" />
+
+        <input type="file" id="fileInput" accept="image/png, image/jpeg" style="display: none;" />
+    </div>
+
+    <p id="errorMsg"></p>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const errorMsg = document.getElementById('errorMsg');
+        const imgPreview = document.getElementById('imgPreview');
+        const uploadText = document.getElementById('uploadText');
+
+        // 1. 點擊框框觸發 input
+        dropZone.onclick = function (e) {
+            // 防止點擊到圖片時重複觸發
+            if (e.target !== imgPreview) {
+                fileInput.click();
+            }
+        };
+
+        // 2. 處理檔案選擇
+        fileInput.onchange = function (e) {
+            handleFile(e.target.files[0]);
+        };
+
+        // 3. 處理拖曳效果 (Drag & Drop)
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        // 核心邏輯：驗證與顯示
+        async function handleFile(file) {
+            if (!file) return;
+
+            // --- 重置狀態 ---
+            errorMsg.innerText = "";
+            fileInput.value = "";
+
+            // 1. 先做基礎的大小檢查 (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                errorMsg.innerText = "圖片超過容量限制";
+                hidePreview();
+                return;
+            }
+
+            // 2. 【核心修改】檢查 Magic Header
+            const isValidRealType = await checkMagicNumbers(file);
+            if (!isValidRealType) {
+                errorMsg.innerText = "僅支援JPG、PNG格式 (檔案內容不符)";
+                hidePreview();
+                return;
+            }
+
+            // 3. 成功後顯示預覽
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imgPreview.src = e.target.result;
+                uploadText.style.display = 'none';
+                imgPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /**
+         * 讀取檔案二進位頭部資訊
+         */
+        function checkMagicNumbers(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                // 我們只需要讀取前 8 個位元組就夠判斷了
+                const blob = file.slice(0, 8);
+
+                reader.onload = function (e) {
+                    const buffer = new Uint8Array(e.target.result);
+                    const header = Array.from(buffer)
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('')
+                        .toUpperCase();
+
+                    // 定義常見格式的 Magic Number
+                    const isPNG = header.startsWith("89504E47"); // PNG: 89 50 4E 47
+                    const isJPG = header.startsWith("FFD8FF");   // JPEG: FF D8 FF
+
+                    resolve(isPNG || isJPG);
+                };
+
+                reader.readAsArrayBuffer(blob);
+            });
+        }
+
+        // 輔助函式：恢復初始狀態
+        function hidePreview() {
+            imgPreview.src = "#";
+            imgPreview.style.display = 'none';
+            uploadText.style.display = 'flex'; // 或者 'block'，視 CSS 而定
+        }
+    </script>
+}
