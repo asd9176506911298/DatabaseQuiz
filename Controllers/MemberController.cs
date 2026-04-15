@@ -75,7 +75,7 @@ namespace DatabaseQuiz.Controllers
             string extension = Path.GetExtension(uploadedFile.FileName).ToLower();
             if (extension != ".jpg" && extension != ".png")
             {
-                ViewBag.ErrorMessage = "支援JPG、PNG格式";
+                ViewBag.ErrorMessage = "僅支援JPG、PNG格式";
                 return View();
             }
 
