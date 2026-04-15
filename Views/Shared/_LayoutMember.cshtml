@@ -20,7 +20,9 @@
                     <li>@Html.ActionLink("主頁面", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
                     <li>@Html.ActionLink("上傳檔案", "Upload", "Member", new { area = "" }, new { @class = "nav-link" })</li>
                     <li>@Html.ActionLink("登出", "LogOut", "Member", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li><a href="#" class="nav-link">@Session["Welcome"]</a></li>
+                    <ul class="navbar-nav ms-auto">
+                        <li><a href="#" class="nav-link">@Session["Welcome"]</a></li>
+                    </ul>
                 </ul>
             </div>
         </div>
