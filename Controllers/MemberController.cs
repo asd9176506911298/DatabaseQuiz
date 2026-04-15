@@ -36,6 +36,8 @@ namespace DatabaseQuiz.Controllers
         [HttpPost]
         public ActionResult Upload(HttpPostedFileBase uploadedFile)
         {
+            ViewBag.SuccessMessage = null;
+
             var member = Session["User"] as DatabaseQuiz.Models.Member;
             if (member == null || !member.isAdmin)
             {
@@ -73,9 +75,9 @@ namespace DatabaseQuiz.Controllers
             }
 
             string extension = Path.GetExtension(uploadedFile.FileName).ToLower();
-            if (extension != ".jpg" && extension != ".png")
+            if (extension != ".jpg" && extension != ".jpeg" && extension != ".png")
             {
-                ViewBag.ErrorMessage = "支援JPG、PNG格式";
+                ViewBag.ErrorMessage = "僅支援JPG、PNG格式";
                 return View();
             }
 
