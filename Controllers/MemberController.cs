@@ -26,12 +26,10 @@ namespace DatabaseQuiz.Controllers
             if (member == null)
             {
                 ViewBag.IsAdmin = false;
-                ViewBag.UserDisplayName = "USER"; // 預設顯示
             }
             else
             {
                 ViewBag.IsAdmin = member.isAdmin;
-                ViewBag.UserDisplayName = member.isAdmin ? "ADMIN" : "USER";
             }
 
             return View();
