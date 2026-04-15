@@ -161,6 +161,8 @@ else
 
             // 1. 先重置錯誤訊息，但先不要清空 fileInput.value
             errorMsg.innerText = "";
+            const successMsg = document.querySelector('p[style*="color:green"]');
+            if (successMsg) successMsg.remove();
 
             // 2. 基礎的大小檢查 (2MB)
             if (file.size > 2 * 1024 * 1024) {

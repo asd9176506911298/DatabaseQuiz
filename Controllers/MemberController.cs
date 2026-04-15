@@ -36,6 +36,8 @@ namespace DatabaseQuiz.Controllers
         [HttpPost]
         public ActionResult Upload(HttpPostedFileBase uploadedFile)
         {
+            ViewBag.SuccessMessage = null;
+
             var member = Session["User"] as DatabaseQuiz.Models.Member;
             if (member == null || !member.isAdmin)
             {
