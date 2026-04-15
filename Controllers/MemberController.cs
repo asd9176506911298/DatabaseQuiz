@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -46,38 +47,43 @@ namespace DatabaseQuiz.Controllers
                 return RedirectToAction("Upload");
             }
 
-            // 2. 檢查是否有檔案
-            if (uploadedFile != null && uploadedFile.ContentLength > 0)
-            {
-                // 3. 後端檢查大小 (2MB = 2097152 bytes)
-                if (uploadedFile.ContentLength > 2 * 1024 * 1024)
-                {
-                    ViewBag.ErrorMessage = "圖片超過容量限制";
-                    return View();
-                }
+            ViewBag.IsAdmin = member.isAdmin;
 
-                // 4. 後端檢查副檔名
-                string extension = System.IO.Path.GetExtension(uploadedFile.FileName).ToLower();
-                if (extension == ".jpg" || extension == ".png")
-                {
-                    ViewBag.SuccessMessage = "檔案驗證成功！(模擬上傳完成)";
-                    ViewBag.IsAdmin = true; // 保持頁面狀態
-                    ViewBag.UserDisplayName = "ADMIN";
-                    return View();
-                }
-                else
-                {
-                    ViewBag.ErrorMessage = "支援JPG、PNG格式";
-                }
-            }
-            else
+            if (uploadedFile == null || uploadedFile.ContentLength == 0)
             {
                 ViewBag.ErrorMessage = "請選擇檔案";
+                return View();
             }
 
-            // 失敗則回傳原頁面
-            ViewBag.IsAdmin = member.isAdmin;
-            ViewBag.UserDisplayName = "ADMIN";
+            if (uploadedFile.ContentLength > 2 * 1024 * 1024)
+            {
+                ViewBag.ErrorMessage = "圖片超過容量限制";
+                return View();
+            }
+
+            // Magic Header 驗證
+            byte[] buffer = new byte[8];
+            uploadedFile.InputStream.Read(buffer, 0, 8);
+            uploadedFile.InputStream.Position = 0;
+            string hexHeader = BitConverter.ToString(buffer).Replace("-", "").ToUpper();
+
+            bool isPNG = hexHeader.StartsWith("89504E47");
+            bool isJPG = hexHeader.StartsWith("FFD8FF");
+
+            if (!isPNG && !isJPG)
+            {
+                ViewBag.ErrorMessage = "檔案內容格式不符 (Magic Number 驗證失敗)";
+                return View();
+            }
+
+            string extension = Path.GetExtension(uploadedFile.FileName).ToLower();
+            if (extension != ".jpg" && extension != ".png")
+            {
+                ViewBag.ErrorMessage = "支援JPG、PNG格式";
+                return View();
+            }
+
+            ViewBag.SuccessMessage = "檔案驗證成功！(模擬上傳完成)";
             return View();
         }
 
