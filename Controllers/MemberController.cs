@@ -41,8 +41,9 @@ namespace DatabaseQuiz.Controllers
             var member = Session["User"] as DatabaseQuiz.Models.Member;
             if (member == null || !member.isAdmin)
             {
-                TempData["Error"] = "權限不足，無法上傳圖片";
-                return RedirectToAction("Upload");
+                ViewBag.ErrorMessage = "權限不足，無法上傳圖片";
+                ViewBag.IsAdmin = false;
+                return View();
             }
 
             ViewBag.IsAdmin = member.isAdmin;
